@@ -1,0 +1,19 @@
+{
+    "js": {
+        "replaceString": "<!-- cdn js libs -->",
+        "replaceWith": "<script src='@' defer></script>",
+        "downloadDirectory": "tmp/js",
+        "dependencies": [
+            "https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+            "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+        ]
+    },
+    "css": {
+        "replaceString": "<!-- cdn css libs -->",
+        "replaceWith": "<link href='@'>",
+        "downloadDirectory": "tmp/css",
+        "dependencies": [
+            "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"
+        ]
+    }
+}
