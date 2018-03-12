@@ -85,10 +85,10 @@ describe("download cdn", () => {
                     fs.accessAsync(jsFile),
                     fs.accessAsync(cssFile)
                 ])
-                .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been)"))
-                .catch((err) => {
-                    if (err.code !== 'ENOENT') throw err;
-                });
+                    .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been)"))
+                    .catch((err) => {
+                        if (err.code !== 'ENOENT') throw err;
+                    });
             });
         });
     });

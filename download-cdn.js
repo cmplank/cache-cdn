@@ -90,7 +90,7 @@ function alwaysDownloadCdnLibs(config) {
 			})
 		);
 	});
-	
+
 	return promiseStack;
 }
 
