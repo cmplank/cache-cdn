@@ -1,7 +1,7 @@
 {
     "js": {
         "replaceString": "<!-- cdn js libs -->",
-        "replaceFormat": "<script src='@' defer></script>",
+        "replaceTemplate": "<script src='@' defer></script>",
         "downloadDirectory": "tmp/js",
         "dependencies": [
             "https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js",
@@ -10,7 +10,7 @@
     },
     "css": {
         "replaceString": "<!-- cdn css libs -->",
-        "replaceFormat": "<link href='@'>",
+        "replaceTemplate": "<link href='@'>",
         "downloadDirectory": "tmp/css",
         "dependencies": [
             "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"

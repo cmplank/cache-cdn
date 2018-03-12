@@ -7,30 +7,26 @@ const downloadFile = Promise.promisify(require("download-file"));
 
 const downloadCdn = (options) => {
 	validateOptions(options);
-	let filesToProcess = options.filesToProcess;
-	let downloadLibs = options.downloadLibs;
+	let sourceFile = options.sourceFile;
+	let destinationFile = options.destinationFile;
+	let downloadLibs = (options.downloadLibs != null) ? options.downloadLibs : true;
+	let configFile = options.configFile || "cdn.json";
 
 	// Lookup config in cdn.json
-	let mainPromise = fs.readFileAsync("cdn.json", 'utf8').then((data) => {
+	let mainPromise = fs.readFileAsync(configFile, 'utf8').then((data) => {
 		let config = JSON.parse(data);
 		config = parseDependencies(config);
-		let blockPromises = [];
+		let promiseStack = [];
 
-		// Iterate through config blocks
-		Object.values(config).forEach(function (block) {
+		if (downloadLibs) {
+			Array.prototype.push.apply(promiseStack, alwaysDownloadCdnLibs(config));
+		}
 
-			// Download Libs
-			if (downloadLibs) {
-				blockPromises.push(alwaysDownloadCdnLibs(block));
-			}
+		if (sourceFile) {
+			promiseStack.push(addCdnEntriesToHtml(config, sourceFile, destinationFile));
+		}
 
-			// Process Html File
-			if (filesToProcess) {
-				blockPromises.push(replaceStringWithCdnEntries(block, filesToProcess));
-			}
-		});
-
-		return Promise.all(blockPromises);
+		return Promise.all(promiseStack);
 	});
 
 	return mainPromise;
@@ -41,8 +37,17 @@ function validateOptions(options) {
 		throw new Error("No options provided, so do nothing");
 	}
 
-	if (options.filesToProcess && !Array.isArray(options.filesToProcess)) {
-		throw new Error("option.filesToProcess must be an array");
+	if (options.sourceFile && typeof options.sourceFile !== 'string') {
+		throw new Error("option.sourceFile must be a string");
+	}
+
+	if (options.destinationFile && typeof options.destinationFile !== 'string') {
+		throw new Error("option.destinationFile must be a string");
+	}
+
+	if ((options.sourceFile || options.destinationFile)
+		&& !(options.destinationFile && options.sourceFile)) {
+		throw new Error("You must include both options.sourceFile and options.destinationFile or neither");
 	}
 
 	if (options.downloadLibs && typeof options.downloadLibs !== 'boolean') {
@@ -65,23 +70,47 @@ function parseDependencies(config) {
 }
 
 // TODO: Only download libs as needed
-function alwaysDownloadCdnLibs(block) {
-	// Create folder if none exists
-	return mkdirp(block.downloadDirectory).then(() => {
-		// Download files from cdn into it
-		let filePromises = block.dependencies.map(function (dependency) {
-			return downloadFile(dependency.url, {
-				directory: block.downloadDirectory,
-				filename: dependency.filename
-			});
-		});
+function alwaysDownloadCdnLibs(config) {
+	let promiseStack = [];
 
-		return Promise.all(filePromises);
+	// Iterate through config blocks
+	Object.values(config).forEach(function (block) {
+		promiseStack.push(
+			// Create folder if none exists
+			mkdirp(block.downloadDirectory).then(() => {
+				// Download sourceFile from cdn into it
+				let downloadPromises = block.dependencies.map(function (dependency) {
+					return downloadFile(dependency.url, {
+						directory: block.downloadDirectory,
+						filename: dependency.filename
+					});
+				});
+
+				return Promise.all(downloadPromises);
+			})
+		);
 	});
+	
+	return promiseStack;
 }
 
-function replaceStringWithCdnEntries(block, filesToProcess) {
-	// Replace "replaceString" with files in format "replaceFormat"
+function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
+	return fs.readFileAsync(sourceFile, 'utf8').then((htmlFileContents) => {
+
+		// Iterate through cdn.json properties (e.g. "js", "css")
+		Object.values(config).forEach(function (block) {
+			let [preTemplate, postTemplate] = block.replaceTemplate.split("@");
+			let templatedCdnEntries = block.dependencies
+				.map((dependency) => preTemplate + dependency.url + postTemplate)
+				.join("\n");
+
+			htmlFileContents = htmlFileContents.replace(block.replaceString, templatedCdnEntries);
+		});
+
+		return mkdirp(destinationFile.substring(0, destinationFile.lastIndexOf("/"))).then(() => {
+			return fs.writeFileAsync(destinationFile, htmlFileContents, 'utf8');
+		});
+	});
 }
 
 module.exports = downloadCdn;
