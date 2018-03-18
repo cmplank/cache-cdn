@@ -39,7 +39,20 @@ describe("download cdn", () => {
         expect(normalCall).to.throw();
     });
 
-    describe("when running with good config", () => {
+    it("fails when running with bad config: duplicate filenames: download ON", () => {
+        let options = {
+            configFile: "cdn.bad.json",
+            downloadLibs: true
+        };
+        let downloadErrorMessage = "Cdn files were downloaded (but shouldn't have been because config was bad)";
+        return downloadCdn(options)
+            .then(() => expect.fail(null, null, downloadErrorMessage))
+            .catch(err => {
+                if (err.message === downloadErrorMessage) throw err;
+            });
+    });
+
+    describe("when running with good config: download ON", () => {
         let options = {
             sourceFile: "app/index.html",
             destinationFile: "tmp/index.html"
@@ -72,7 +85,7 @@ describe("download cdn", () => {
         });
     });
 
-    describe("when running with good config - download off", () => {
+    describe("when running with good config: download OFF", () => {
         let options = {
             downloadLibs: false,
             sourceFile: "app/index.html",
@@ -85,8 +98,8 @@ describe("download cdn", () => {
                     fs.accessAsync(jsFile),
                     fs.accessAsync(cssFile)
                 ])
-                    .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been)"))
-                    .catch((err) => {
+                    .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been because download was turned off)"))
+                    .catch(err => {
                         if (err.code !== 'ENOENT') throw err;
                     });
             });

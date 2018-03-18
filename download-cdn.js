@@ -3,9 +3,9 @@
 const Promise = require("bluebird");
 const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
-const downloadFile = Promise.promisify(require("download-file"));
+const requestPromise = require("request-promise");
 
-const downloadCdn = (options) => {
+const downloadCdn = options => {
     validateOptions(options);
     let sourceFile = options.sourceFile;
     let destinationFile = options.destinationFile;
@@ -13,13 +13,14 @@ const downloadCdn = (options) => {
     let configFile = options.configFile || "cdn.json";
 
     // Lookup config in cdn.json
-    let mainPromise = fs.readFileAsync(configFile, 'utf8').then((data) => {
+    let mainPromise = fs.readFileAsync(configFile, 'utf8').then(data => {
         let config = JSON.parse(data);
         config = parseDependencies(config);
+        validateConfig(config);
         let promiseStack = [];
 
         if (downloadLibs) {
-            Array.prototype.push.apply(promiseStack, alwaysDownloadCdnLibs(config));
+            promiseStack.push(alwaysDownloadCdnLibs(config));
         }
 
         if (sourceFile) {
@@ -56,12 +57,15 @@ function validateOptions(options) {
 }
 
 function parseDependencies(config) {
-    Object.keys(config).forEach(function (blockName) {
+    Object.keys(config).forEach(blockName => {
         let block = config[blockName];
-        block.dependencies = block.dependencies.map((url) => {
+        block.dependencies = block.dependencies.map(dependency => {
+            if (dependency.url && dependency.filename) {
+                return dependency;
+            }
             return {
-                url: url,
-                filename: url.substring(url.lastIndexOf('/') + 1)
+                url: dependency,
+                filename: dependency.substring(dependency.lastIndexOf('/') + 1)
             };
         });
     });
@@ -69,36 +73,72 @@ function parseDependencies(config) {
     return config;
 }
 
+function validateConfig(config) {
+    // Throw error when duplicate filenames exist in shared downloadDirectory
+    let filenamesByDirectory = new Map();
+    Object.values(config).forEach(block => {
+        if (!filenamesByDirectory.has(block.downloadDirectory)) {
+            filenamesByDirectory.set(
+                block.downloadDirectory,
+                block.dependencies.map(dep => dep.filename)
+            );
+        } else {
+            Arrays.apply.push(
+                filenamesByDirectory.get(block.downloadDirectory),
+                block.dependencies.map(dep => dep.filename)
+            );
+        }
+    })
+
+    filenamesByDirectory.forEach(filenamesArray => {
+        if (filenamesArray.length > (new Set(filenamesArray)).size) {
+            throw new Error("Detected multiple filenames to be downloaded into the same folder. "
+                + "Disambiguate filenames by specifying one dependency with url and filename. "
+                + "See documentation for details.");
+        }
+    });
+}
+
 // TODO: Only download libs as needed
 function alwaysDownloadCdnLibs(config) {
     let promiseStack = [];
 
-    // Iterate through config blocks
-    Object.values(config).forEach(function (block) {
-        promiseStack.push(
-            // Create folder if none exists
-            mkdirp(block.downloadDirectory).then(() => {
-                // Download sourceFile from cdn into it
-                let downloadPromises = block.dependencies.map(function (dependency) {
-                    return downloadFile(dependency.url, {
-                        directory: block.downloadDirectory,
-                        filename: dependency.filename
-                    });
-                });
+    // 1. Get modified date of config file
+    // 2. Only download if modified date of file is less than config
 
-                return Promise.all(downloadPromises);
-            })
-        );
+    // Iterate through config blocks
+    Object.values(config).forEach(block => {
+
+        // Create folder if none exists
+        let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
+            // Download sourceFile from cdn into it
+            let downloadPromiseStack = block.dependencies.map(dependency => {
+                return downloadFile(dependency.url, block.downloadDirectory + "/" + dependency.filename);
+            });
+
+            return Promise.all(downloadPromiseStack);
+        })
+
+        promiseStack.push(mkdirPromise);
     });
 
-    return promiseStack;
+    return Promise.all(promiseStack);
 }
 
+function downloadFile(url, destinationFile) {
+    return requestPromise(url).then(response => {
+        return new Promise((resolve, reject) => {
+            fs.createWriteStream(destinationFile)
+                .write(response, () => resolve(true));
+        });
+    });
+};
+
 function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
-    return fs.readFileAsync(sourceFile, 'utf8').then((htmlFileContents) => {
+    return fs.readFileAsync(sourceFile, 'utf8').then(htmlFileContents => {
 
         // Iterate through cdn.json properties (e.g. "js", "css")
-        Object.values(config).forEach(function (block) {
+        Object.values(config).forEach(block => {
             let [preTemplate, postTemplate] = block.replaceTemplate.split("@");
             let templatedCdnEntries = block.dependencies
                 .map((dependency) => preTemplate + dependency.url + postTemplate)
