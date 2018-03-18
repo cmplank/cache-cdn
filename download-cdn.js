@@ -3,6 +3,7 @@
 const Promise = require("bluebird");
 const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
+const downloadFile = Promise.promisify(require("download-file"));
 const requestPromise = require("request-promise");
 
 const downloadCdn = options => {
@@ -126,7 +127,10 @@ function alwaysDownloadCdnLibs(config) {
             // Download sourceFile from cdn into it
             return Promise.all(
                 block.dependencies.map(dependency => {
-                    return downloadFile(dependency.url, block.downloadDirectory + "/" + dependency.filename);
+                    return downloadFile(dependency.url, {
+                        directory: block.downloadDirectory,
+                        filename: dependency.filename
+                    });
                 })
             );
         })
@@ -137,11 +141,11 @@ function alwaysDownloadCdnLibs(config) {
     return Promise.all(promiseStack);
 }
 
-function downloadFile(url, destinationFile) {
-    return requestPromise(url).then(response => {
-        return fs.writeFileAsync(destinationFile, response);
-    });
-};
+// function downloadFile(url, destinationFile) {
+//     return requestPromise(url).then(response => {
+//         return fs.writeFileAsync(destinationFile, response);
+//     });
+// };
 
 function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
     return fs.readFileAsync(sourceFile, 'utf8').then(htmlFileContents => {
