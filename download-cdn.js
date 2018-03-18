@@ -104,7 +104,19 @@ function alwaysDownloadCdnLibs(config) {
     let promiseStack = [];
 
     // 1. Get modified date of config file
-    // 2. Only download if modified date of file is less than config
+    // 2. While iterating through blocks/files (for downloading)
+    //   a. Get modified date of file
+    //   b. Only download file if modified date of file is < cdn.json
+
+    // 1. Lookup cdn-lock.json if exists (url, filename, hash), else create
+    //   a. Iterate through blocks/files
+    //   b. Remove entries whose url/filename matches don't exist in cdn.json
+    // 2. While iterating through blocks/files (for downloading)
+    //   a. If url/filename match exists
+    //     i. Hash file
+    //     ii. if hash matches, do nothing
+    //   b. (from a or ii) else download file, hash, and add entry
+    // 2. After iterating all, write cdn-lock.json
 
     // Iterate through config blocks
     Object.values(config).forEach(block => {
@@ -112,11 +124,11 @@ function alwaysDownloadCdnLibs(config) {
         // Create folder if none exists
         let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
             // Download sourceFile from cdn into it
-            let downloadPromiseStack = block.dependencies.map(dependency => {
-                return downloadFile(dependency.url, block.downloadDirectory + "/" + dependency.filename);
-            });
-
-            return Promise.all(downloadPromiseStack);
+            return Promise.all(
+                block.dependencies.map(dependency => {
+                    return downloadFile(dependency.url, block.downloadDirectory + "/" + dependency.filename);
+                })
+            );
         })
 
         promiseStack.push(mkdirPromise);
@@ -127,10 +139,7 @@ function alwaysDownloadCdnLibs(config) {
 
 function downloadFile(url, destinationFile) {
     return requestPromise(url).then(response => {
-        return new Promise((resolve, reject) => {
-            fs.createWriteStream(destinationFile)
-                .write(response, () => resolve(true));
-        });
+        return fs.writeFileAsync(destinationFile, response);
     });
 };
 
