@@ -89,6 +89,7 @@ describe("download cdn", () => {
     // 1. cdn-lock.json has entries, but files are not present
     // 2. cdn-lock.json has no entries, but files are present which would conflict
     // 3. cnd-lock.json has entry which matches a local file, but hash is different
+    // 4. cdn-lock.json has entries and files are present - ensure no download
 
     describe("when running with good config: download OFF", () => {
         let options = {
