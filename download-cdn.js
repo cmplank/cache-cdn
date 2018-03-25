@@ -3,8 +3,8 @@
 const Promise = require("bluebird");
 const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
-const downloadFile = Promise.promisify(require("download-file"));
 const requestPromise = require("request-promise");
+const crypto = require('crypto');
 
 const downloadCdn = options => {
     validateOptions(options);
@@ -102,7 +102,6 @@ function validateConfig(config) {
 
 // TODO: Only download libs as needed
 function alwaysDownloadCdnLibs(config) {
-    let promiseStack = [];
 
     // 1. Get modified date of config file
     // 2. While iterating through blocks/files (for downloading)
@@ -119,33 +118,113 @@ function alwaysDownloadCdnLibs(config) {
     //   b. (from a or ii) else download file, hash, and add entry
     // 2. After iterating all, write cdn-lock.json
 
-    // Iterate through config blocks
-    Object.values(config).forEach(block => {
-
-        // Create folder if none exists
-        let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
-            // Download sourceFile from cdn into it
-            return Promise.all(
-                block.dependencies.map(dependency => {
-                    return downloadFile(dependency.url, {
-                        directory: block.downloadDirectory,
-                        filename: dependency.filename
-                    });
-                })
-            );
+    let cdnLockPromise = fs.readFileAsync('cdn-lock.json', 'utf8')
+        .then(contents => {
+            let cdnLock = JSON.parse(contents);
+            // Iterate through blocks/files
+            // Remove entries whose url/filename matches don't exist in cdn.json
+            return cdnLock;
         })
+        .catch(err => {
+            console.log("cdn-lock.json not found");
+            // If the file isn't there, return empty array
+            if (err.code === 'ENOENT') return [];
+            // Otherwise, freak out
+            throw err;
+        });
 
-        promiseStack.push(mkdirPromise);
+    return cdnLockPromise.then(cdnLock => {
+
+        let promiseStack = [];
+
+        // Iterate through config blocks
+        Object.values(config).forEach(block => {
+
+            // Create directory if none exists
+            let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
+
+                // Download files from cdn.json
+                let filePromiseStack = [];
+
+                block.dependencies.forEach(dep => {
+
+                    let filepath = block.downloadDirectory + "/" + dep.filename;
+                    let willDownloadPromise = Promise.resolve(true);
+
+                    if (cdnLock.some(lock => lock.url === dep.url && lock.filename === dep.filename)) {
+                        // must download if hashes don't match or file not found
+                        willDownloadPromise = hashFile(filepath)
+                            .then(hash => hash !== lock.hash)
+                            .catch(err => true);
+                    }
+
+                    filePromiseStack.push(
+                        willDownloadPromise.then(willDownload => {
+                            if (willDownload) {
+                                return downloadFile(dep.url, filepath)
+                                    .then(content => {
+                                        dep.hash = createHash(content);
+                                        updateCdnLockList(cdnLock, dep);
+                                    })
+                            }
+                        })
+                    );
+
+                });
+
+                return Promise.all(filePromiseStack);
+
+            })
+
+            promiseStack.push(mkdirPromise);
+        });
+
+        return Promise.all(promiseStack).then(() => {
+            cdnLock.sort(sortByUrl);
+            console.log(cdnLock);
+            return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock));
+        });
     });
-
-    return Promise.all(promiseStack);
 }
 
-// function downloadFile(url, destinationFile) {
-//     return requestPromise(url).then(response => {
-//         return fs.writeFileAsync(destinationFile, response);
-//     });
-// };
+function updateCdnLockList(cdnLock, dep) {
+    let existingLock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);
+    if (existingLock) {
+        let removeIndex = cdnLock.indexOf(existingLock);
+        cdnLock.splice(removeIndex, 1);
+    }
+    cdnLock.push(dep);
+}
+
+function hashFile(filepath) {
+    return fs.readFileAsync(filepath, 'utf8')
+        .then(contents => createHash(contents));
+}
+
+function createHash(string) {
+    return crypto.createHash('md5').update(string).digest('hex');
+}
+
+function downloadFile(url, destinationFile) {
+    return requestPromise(url).then(content => {
+        return fs.writeFileAsync(destinationFile, content)
+            .then(() => content);
+    });
+};
+
+function sortByUrl(a, b) {
+    return a.url.toUpperCase()
+        .localeCompare(b.url.toUpperCase());
+    // var urlA = a.url.toUpperCase(); // ignore upper and lowercase
+    // var urlB = b.url.toUpperCase(); // ignore upper and lowercase
+    // if (urlA < urlB) {
+    //   return -1;
+    // }
+    // if (urlA > urlB) {
+    //   return 1;
+    // }
+    // return 0;
+}
 
 function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
     return fs.readFileAsync(sourceFile, 'utf8').then(htmlFileContents => {

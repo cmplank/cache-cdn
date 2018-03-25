@@ -85,6 +85,11 @@ describe("download cdn", () => {
         });
     });
 
+    // TODO: Test conditions such as:
+    // 1. cdn-lock.json has entries, but files are not present
+    // 2. cdn-lock.json has no entries, but files are present which would conflict
+    // 3. cnd-lock.json has entry which matches a local file, but hash is different
+
     describe("when running with good config: download OFF", () => {
         let options = {
             downloadLibs: false,
