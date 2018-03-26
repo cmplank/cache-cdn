@@ -1,0 +1,17 @@
+[
+    {
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js",
+        "filename": "jquery2.min.js",
+        "hash": "2edc942c0bd2476be8967a9f788d9e26"
+    },
+    {
+        "url": "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js",
+        "filename": "jquery.min.js",
+        "hash": "a09e13ee94d51c524b7e2a728c7d4039"
+    },
+    {
+        "url": "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css",
+        "filename": "bootstrap.min.css",
+        "hash": "450fc463b8b1a349df717056fbb3e078"
+    }
+]

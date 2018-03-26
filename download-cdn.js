@@ -123,7 +123,7 @@ function alwaysDownloadCdnLibs(config) {
             return cdnLock;
         })
         .catch(err => {
-            console.log("cdn-lock.json not found");
+            // console.log("cdn-lock.json not found");
             // If the file isn't there, return empty array
             if (err.code === 'ENOENT') return [];
             // Otherwise, freak out
