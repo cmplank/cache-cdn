@@ -7,6 +7,7 @@ const requestPromise = require("request-promise");
 const crypto = require('crypto');
 
 const downloadCdn = options => {
+    if (!options) options = {};
     validateOptions(options);
     let sourceFile = options.sourceFile;
     let destinationFile = options.destinationFile;
@@ -35,10 +36,6 @@ const downloadCdn = options => {
 };
 
 function validateOptions(options) {
-    if (!options || Object.keys(options).length === 0) {
-        throw new Error("No options provided, so do nothing");
-    }
-
     if (options.sourceFile && typeof options.sourceFile !== 'string') {
         throw new Error("option.sourceFile must be a string");
     }
@@ -181,7 +178,7 @@ function alwaysDownloadCdnLibs(config) {
 
         return Promise.all(promiseStack).then(() => {
             cdnLock.sort(sortByUrl);
-            console.log(cdnLock);
+            // console.log(cdnLock);
             return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock));
         });
     });
