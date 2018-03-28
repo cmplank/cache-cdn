@@ -144,15 +144,18 @@ function alwaysDownloadCdnLibs(config) {
                 let filePromiseStack = [];
 
                 block.dependencies.forEach(dep => {
-
                     let filepath = block.downloadDirectory + "/" + dep.filename;
                     let willDownloadPromise = Promise.resolve(true);
 
-                    if (cdnLock.some(lock => lock.url === dep.url && lock.filename === dep.filename)) {
+                    let lock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);
+                    if (lock) {
                         // must download if hashes don't match or file not found
                         willDownloadPromise = hashFile(filepath)
-                            .then(hash => hash !== lock.hash)
-                            .catch(err => true);
+                            // swallow error for file not found
+                            .catch(err => null)
+                            .then(hash => {
+                                return hash !== lock.hash
+                            });
                     }
 
                     filePromiseStack.push(

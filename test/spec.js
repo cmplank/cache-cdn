@@ -1,10 +1,11 @@
 
-let expect = require("chai").expect;
-let downloadCdn = require("../download-cdn");
+const expect = require("chai").expect;
+const downloadCdn = require("../download-cdn");
 
-let Promise = require("bluebird");
-let rimraf = Promise.promisify(require("rimraf"));
-let fs = Promise.promisifyAll(require("fs"));
+const Promise = require("bluebird");
+const rimraf = Promise.promisify(require("rimraf"));
+const fs = Promise.promisifyAll(require("fs"));
+const mkdirp = Promise.promisify(require("mkdirp"));
 
 describe("download cdn", () => {
 
@@ -87,7 +88,7 @@ describe("download cdn", () => {
 
         it("does not download cdn references", () => {
             return downloadCdn(options)
-                .then(ensureFilesNotDownloaded);
+                .then(ensureFilesNotFoundLocally);
         });
     });
 
@@ -126,22 +127,30 @@ describe("download cdn", () => {
             });
 
             it("and files are present - does not download cdn references again", () => {
+                let jqueryCreateTime, jquery2CreateTime, bootstrapCreateTime;
+
                 return Promise.all([
                     cdnLockExistsPromise,
                     copyFile(testJqueryFile, jqueryFile),
                     copyFile(testJquery2File, jquery2File),
                     copyFile(testBootstrapFile, bootstrapFile)
                 ])
+                .then(() => {
+                    return fs.statAsync(jqueryFile)
+                        .then(stats => {
+                            return jqueryCreateTime = stats.ctimeMs;
+                        });
+                })
                 .then(downloadCdn)
-                .then(() => expect.fail(null, null, "Haven't figured it out yet"));
-                // Check date modified at beginning and see if it changes after downloadCdn runs?
-                // .then(ensureFilesNotDownloaded);  This isn't right because they will be there even if they weren't downloaded
+                .then(() => {
+                    return fs.statAsync(jqueryFile)
+                        .then(stats => {
+                            if (jqueryCreateTime < stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
+                        });
+                });
             });
         });
     });
-
-    // TODO: Test conditions such as:
-    // 4. cdn-lock.json has entries and files are present - ensure no download
 
     function ensureFilesDownloaded() {
         return Promise.all([
@@ -151,12 +160,12 @@ describe("download cdn", () => {
         ]);
     }
 
-    function ensureFilesNotDownloaded() {
+    function ensureFilesNotFoundLocally() {
         return ensureFilesDownloaded()
             .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been because download was turned off)"))
             .catch(err => {
                 if (err.code !== 'ENOENT') throw err;
-            })
+            });
     }
 
     function ensureBadJqueryFileOverwritten() {
@@ -169,11 +178,18 @@ describe("download cdn", () => {
     }
 
     function copyFile(src, dest) {
-        return new Promise((resolve, reject) => {
-            fs.copyFile(src, dest, () => {
-                resolve(true);
+        return mkdirp(getDirectoryFromFilepath(dest))
+            .then(() => {
+                return new Promise((resolve, reject) => {
+                    fs.copyFile(src, dest, () => {
+                        resolve(true);
+                    });
+                });
             });
-        });
+    }
+
+    function getDirectoryFromFilepath(filepath) {
+        return filepath.substring(0, filepath.lastIndexOf("/"))
     }
 
 });
