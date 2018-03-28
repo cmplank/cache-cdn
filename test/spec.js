@@ -129,25 +129,37 @@ describe("download cdn", () => {
             it("and files are present - does not download cdn references again", () => {
                 let jqueryCreateTime, jquery2CreateTime, bootstrapCreateTime;
 
+                // Setup test data
                 return Promise.all([
                     cdnLockExistsPromise,
                     copyFile(testJqueryFile, jqueryFile),
                     copyFile(testJquery2File, jquery2File),
                     copyFile(testBootstrapFile, bootstrapFile)
                 ])
-                .then(() => {
-                    return fs.statAsync(jqueryFile)
-                        .then(stats => {
-                            return jqueryCreateTime = stats.ctimeMs;
-                        });
-                })
-                .then(downloadCdn)
-                .then(() => {
-                    return fs.statAsync(jqueryFile)
-                        .then(stats => {
-                            if (jqueryCreateTime < stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
-                        });
-                });
+                    // Record file create times
+                    .then(() => {
+                        return Promise.all([
+                            fs.statAsync(jqueryFile).then(stats => jqueryCreateTime = stats.ctimeMs),
+                            fs.statAsync(jquery2File).then(stats => jquery2CreateTime = stats.ctimeMs),
+                            fs.statAsync(bootstrapFile).then(stats => bootstrapCreateTime = stats.ctimeMs)
+                        ])
+                    })
+                    // Run method under test
+                    .then(downloadCdn)
+                    // Validate create times are unchanged
+                    .then(() => {
+                        return Promise.all([
+                            fs.statAsync(jqueryFile).then(stats => {
+                                if (jqueryCreateTime !== stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
+                            }),
+                            fs.statAsync(jquery2File).then(stats => {
+                                if (jquery2CreateTime !== stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
+                            }),
+                            fs.statAsync(bootstrapFile).then(stats => {
+                                if (bootstrapCreateTime !== stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
+                            })
+                        ])
+                    });
             });
         });
     });
