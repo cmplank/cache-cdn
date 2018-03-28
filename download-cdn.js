@@ -181,7 +181,6 @@ function alwaysDownloadCdnLibs(config) {
 
         return Promise.all(promiseStack).then(() => {
             cdnLock.sort(sortByUrl);
-            // console.log(cdnLock);
             return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock));
         });
     });
