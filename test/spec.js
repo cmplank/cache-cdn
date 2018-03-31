@@ -127,7 +127,7 @@ describe("download cdn", () => {
             });
 
             it("and files are present - does not download cdn references again", () => {
-                let jqueryCreateTime, jquery2CreateTime, bootstrapCreateTime;
+                let jqueryModifiedTime, jquery2ModifiedTime, bootstrapModifiedTime;
 
                 // Setup test data
                 return Promise.all([
@@ -136,28 +136,22 @@ describe("download cdn", () => {
                     copyFile(testJquery2File, jquery2File),
                     copyFile(testBootstrapFile, bootstrapFile)
                 ])
-                    // Record file create times
+                    // Record file modified times
                     .then(() => {
                         return Promise.all([
-                            fs.statAsync(jqueryFile).then(stats => jqueryCreateTime = stats.ctimeMs),
-                            fs.statAsync(jquery2File).then(stats => jquery2CreateTime = stats.ctimeMs),
-                            fs.statAsync(bootstrapFile).then(stats => bootstrapCreateTime = stats.ctimeMs)
+                            fs.statAsync(jqueryFile).then(stats => jqueryModifiedTime = stats.mtimeMs),
+                            fs.statAsync(jquery2File).then(stats => jquery2ModifiedTime = stats.mtimeMs),
+                            fs.statAsync(bootstrapFile).then(stats => bootstrapModifiedTime = stats.mtimeMs)
                         ])
                     })
                     // Run method under test
                     .then(() => downloadCdn())
-                    // Validate create times are unchanged
+                    // Validate modified times are unchanged
                     .then(() => {
                         return Promise.all([
-                            fs.statAsync(jqueryFile).then(stats => {
-                                if (jqueryCreateTime !== stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
-                            }),
-                            fs.statAsync(jquery2File).then(stats => {
-                                if (jquery2CreateTime !== stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
-                            }),
-                            fs.statAsync(bootstrapFile).then(stats => {
-                                if (bootstrapCreateTime !== stats.ctimeMs) throw Error("Files were re-downloaded but shouldn't have been");
-                            })
+                            ensureFileModifiedTimeHasntChanged(jqueryFile, jqueryModifiedTime),
+                            ensureFileModifiedTimeHasntChanged(jquery2File, jquery2ModifiedTime),
+                            ensureFileModifiedTimeHasntChanged(bootstrapFile, bootstrapModifiedTime)
                         ])
                     });
             });
@@ -202,6 +196,12 @@ describe("download cdn", () => {
 
     function getDirectoryFromFilepath(filepath) {
         return filepath.substring(0, filepath.lastIndexOf("/"))
+    }
+
+    function ensureFileModifiedTimeHasntChanged(filePath, lastModifiedTime) {
+        return fs.statAsync(filePath).then(stats => {
+            if (lastModifiedTime !== stats.mtimeMs) throw Error("Files were re-downloaded but shouldn't have been");
+        })
     }
 
 });
