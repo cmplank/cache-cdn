@@ -17,7 +17,7 @@ const downloadCdn = options => {
     // Lookup config in cdn.json
     let mainPromise = fs.readFileAsync(configFile, 'utf8').then(data => {
         let config = JSON.parse(data);
-        config = parseDependencies(config);
+        config = formatDependencies(config);
         validateConfig(config);
         let promiseStack = [];
 
@@ -54,7 +54,7 @@ function validateOptions(options) {
     }
 }
 
-function parseDependencies(config) {
+function formatDependencies(config) {
     Object.keys(config).forEach(blockName => {
         let block = config[blockName];
         block.dependencies = block.dependencies.map(dependency => {
@@ -115,20 +115,7 @@ function alwaysDownloadCdnLibs(config) {
     //   b. (from a or ii) else download file, hash, and add entry
     // 2. After iterating all, write cdn-lock.json
 
-    let cdnLockPromise = fs.readFileAsync('cdn-lock.json', 'utf8')
-        .then(contents => {
-            let cdnLock = JSON.parse(contents);
-            // Iterate through blocks/files
-            // Remove entries whose url/filename matches don't exist in cdn.json
-            return cdnLock;
-        })
-        .catch(err => {
-            // console.log("cdn-lock.json not found");
-            // If the file isn't there, return empty array
-            if (err.code === 'ENOENT') return [];
-            // Otherwise, freak out
-            throw err;
-        });
+    let cdnLockPromise = readCdnLockFile();
 
     return cdnLockPromise.then(cdnLock => {
 
@@ -184,6 +171,23 @@ function alwaysDownloadCdnLibs(config) {
             return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock));
         });
     });
+}
+
+function readCdnLockFile() {
+    return fs.readFileAsync('cdn-lock.json', 'utf8')
+        .then(contents => {
+            let cdnLock = JSON.parse(contents);
+            // Iterate through blocks/files
+            // Remove entries whose url/filename matches don't exist in cdn.json
+            return cdnLock;
+        })
+        .catch(err => {
+            // console.log("cdn-lock.json not found");
+            // If the file isn't there, return empty array
+            if (err.code === 'ENOENT') return [];
+            // Otherwise, freak out
+            throw err;
+        });
 }
 
 function updateCdnLockList(cdnLock, dep) {
