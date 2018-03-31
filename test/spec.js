@@ -101,7 +101,7 @@ describe("download cdn", () => {
 
             it("and wrong file is already local - downloads correct file", () => {
                 return copyFile(badJqueryFile, jqueryFile)
-                    .then(downloadCdn)
+                    .then(() => downloadCdn())
                     .then(ensureBadJqueryFileOverwritten);
             });
         });
@@ -115,14 +115,14 @@ describe("download cdn", () => {
 
             it("but files are not present - downloads cdn references", () => {
                 return cdnLockExistsPromise
-                    .then(downloadCdn)
+                    .then(() => downloadCdn())
                     .then(ensureFilesDownloaded);
             });
 
             it("but local matching filename has wrong contents - downloads correct file", () => {
                 return cdnLockExistsPromise
                     .then(() => copyFile(badJqueryFile, jqueryFile))
-                    .then(downloadCdn)
+                    .then(() => downloadCdn())
                     .then(ensureBadJqueryFileOverwritten);
             });
 
@@ -145,7 +145,7 @@ describe("download cdn", () => {
                         ])
                     })
                     // Run method under test
-                    .then(downloadCdn)
+                    .then(() => downloadCdn())
                     // Validate create times are unchanged
                     .then(() => {
                         return Promise.all([
