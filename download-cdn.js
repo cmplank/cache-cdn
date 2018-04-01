@@ -7,12 +7,16 @@ const requestPromise = require("request-promise");
 const crypto = require('crypto');
 
 const downloadCdn = options => {
-    if (!options) options = {};
-    validateOptions(options);
-    let sourceFile = options.sourceFile;
-    let destinationFile = options.destinationFile;
-    let downloadLibs = (options.downloadLibs != null) ? options.downloadLibs : true;
-    let configFile = options.configFile || "cdn.json";
+    try {
+        if (!options) options = {};
+        validateOptions(options);
+        var sourceFile = options.sourceFile;
+        var destinationFile = options.destinationFile;
+        var downloadLibs = (options.downloadLibs != null) ? options.downloadLibs : true;
+        var configFile = options.configFile || "cdn.json";
+    } catch (err) {
+        return Promise.reject(err);
+    }
 
     // Lookup config in cdn.json
     let mainPromise = fs.readFileAsync(configFile, 'utf8').then(data => {
@@ -22,7 +26,7 @@ const downloadCdn = options => {
         let promiseStack = [];
 
         if (downloadLibs) {
-            promiseStack.push(alwaysDownloadCdnLibs(config));
+            promiseStack.push(downloadCdnLibs(config));
         }
 
         if (sourceFile) {
@@ -97,25 +101,11 @@ function validateConfig(config) {
     });
 }
 
-// TODO: Only download libs as needed
-function alwaysDownloadCdnLibs(config) {
-
-    // 1. Get modified date of config file
-    // 2. While iterating through blocks/files (for downloading)
-    //   a. Get modified date of file
-    //   b. Only download file if modified date of file is < cdn.json
-
-    // 1. Lookup cdn-lock.json if exists (url, filename, hash), else create
-    //   a. Iterate through blocks/files
-    //   b. Remove entries whose url/filename matches don't exist in cdn.json
-    // 2. While iterating through blocks/files (for downloading)
-    //   a. If url/filename match exists
-    //     i. Hash file
-    //     ii. if hash matches, do nothing
-    //   b. (from a or ii) else download file, hash, and add entry
-    // 2. After iterating all, write cdn-lock.json
+function downloadCdnLibs(config) {
 
     let cdnLockPromise = readCdnLockFile();
+
+    // TODO: Remove cdnLock entries that aren't in config
 
     return cdnLockPromise.then(cdnLock => {
 

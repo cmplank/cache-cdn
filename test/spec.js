@@ -1,5 +1,8 @@
-
+const chai = require('chai');
 const expect = require("chai").expect;
+const chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
+
 const downloadCdn = require("../download-cdn");
 
 const Promise = require("bluebird");
@@ -34,16 +37,19 @@ describe("download cdn", () => {
         ]);
     }
 
+    it("fails when can't find cdn.json or specified config file", () => {
+        let options = { configFile: "cdn.missing.json" };
+        return expect(downloadCdn(options)).to.be.rejected;
+    });
+
     it("fails when options.sourceFile is not accompanied by destinationFile", () => {
         let options = { sourceFile: "file.txt" };
-        let normalCall = () => downloadCdn(options);
-        expect(normalCall).to.throw();
+        return expect(downloadCdn(options)).to.be.rejected;
     });
 
     it("fails when options.downloadLibs is not a boolean", () => {
         let options = { downloadLibs: ["my/directory"] };
-        let normalCall = () => downloadCdn(options);
-        expect(normalCall).to.throw();
+        return expect(downloadCdn(options)).to.be.rejected;
     });
 
     it("fails when running with bad config: duplicate filenames: download ON", () => {
