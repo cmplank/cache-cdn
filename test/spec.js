@@ -54,16 +54,18 @@ describe("download cdn", () => {
 
     it("fails when running with bad config: duplicate filenames: download ON", () => {
         let options = {
-            configFile: "cdn.bad.json",
+            configFile: "test-resources/cdn.dup.filename.json",
             downloadLibs: true
         };
-        let downloadErrorMessage = "Cdn files were downloaded (but shouldn't have been because config was bad)";
+        return expect(downloadCdn(options)).to.be.rejected;
+    });
 
-        return downloadCdn(options)
-            .then(() => expect.fail(null, null, downloadErrorMessage))
-            .catch(err => {
-                if (err.message === downloadErrorMessage) throw err;
-            });
+    it("fails when running with bad config: duplicate filenames in different blocks: download ON", () => {
+        let options = {
+            configFile: "test-resources/cdn.dup.filename.diff.block.json",
+            downloadLibs: true
+        };
+        return expect(downloadCdn(options)).to.be.rejected;
     });
 
     describe("when running with index.html insertion config", () => {

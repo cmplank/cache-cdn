@@ -76,20 +76,18 @@ function formatDependencies(config) {
 }
 
 function validateConfig(config) {
-    // Throw error when duplicate filenames exist in shared downloadDirectory
+    // Throw error when duplicate filenames would be created in shared downloadDirectory
     let filenamesByDirectory = new Map();
     Object.values(config).forEach(block => {
+        // Add Map entry for each new directory
         if (!filenamesByDirectory.has(block.downloadDirectory)) {
-            filenamesByDirectory.set(
-                block.downloadDirectory,
-                block.dependencies.map(dep => dep.filename)
-            );
-        } else {
-            Arrays.apply.push(
-                filenamesByDirectory.get(block.downloadDirectory),
-                block.dependencies.map(dep => dep.filename)
-            );
+            filenamesByDirectory.set(block.downloadDirectory, []);
         }
+        // Add filenames to list (per matching directory)
+        Array.prototype.push.apply(
+            filenamesByDirectory.get(block.downloadDirectory),
+            block.dependencies.map(dep => dep.filename)
+        );
     })
 
     filenamesByDirectory.forEach(filenamesArray => {

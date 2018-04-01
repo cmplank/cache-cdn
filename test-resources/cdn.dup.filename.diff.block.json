@@ -1,0 +1,18 @@
+{
+    "js": {
+        "replaceString": "<!-- cdn js libs -->",
+        "replaceTemplate": "<script src='@' defer></script>",
+        "downloadDirectory": "tmp/js",
+        "dependencies": [
+            "https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js"
+        ]
+    },
+    "js2": {
+        "replaceString": "<!-- cdn js2 libs -->",
+        "replaceTemplate": "<script src='@' defer></script>",
+        "downloadDirectory": "tmp/js",
+        "dependencies": [
+            "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+        ]
+    }
+}
