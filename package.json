@@ -4,7 +4,7 @@
   "description": "Manage cdn libs in one place, download them for local (test) use, and write them to html",
   "main": "download-cdn.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "./node_modules/.bin/mocha --timeout 10000 --reporter spec"
   },
   "repository": {
     "type": "git",

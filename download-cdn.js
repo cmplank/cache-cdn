@@ -101,65 +101,51 @@ function validateConfig(config) {
 
 function downloadCdnLibs(config) {
 
-    let cdnLockPromise = readCdnLockFile()
-        .then(cdnLock => removeCdnLockEntriesNotInConfig(cdnLock, config));
+    return readCdnLockFile()
+        .then(cdnLock => removeCdnLockEntriesNotInConfig(cdnLock, config))
+        .then(cdnLock => {
 
-    // TODO: Remove cdnLock entries that aren't in config
+            let promiseStack = [];
 
-    return cdnLockPromise.then(cdnLock => {
+            // Iterate through config blocks
+            Object.values(config).forEach(block => {
 
-        let promiseStack = [];
+                // Create directory if none exists
+                let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
 
-        // Iterate through config blocks
-        Object.values(config).forEach(block => {
+                    // Download files from cdn.json
+                    let filePromiseStack = [];
 
-            // Create directory if none exists
-            let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
+                    block.dependencies.forEach(dep => {
+                        let filepath = block.downloadDirectory + "/" + dep.filename;
+                        let shouldDownloadPromise = checkIfShouldDownloadDependency(dep, filepath, cdnLock);
 
-                // Download files from cdn.json
-                let filePromiseStack = [];
+                        filePromiseStack.push(
+                            shouldDownloadPromise.then(shouldDownload => {
+                                if (shouldDownload) {
+                                    return downloadFile(dep.url, filepath)
+                                        .then(content => {
+                                            dep.hash = createHash(content);
+                                            updateCdnLockList(cdnLock, dep);
+                                        })
+                                }
+                            })
+                        );
 
-                block.dependencies.forEach(dep => {
-                    let filepath = block.downloadDirectory + "/" + dep.filename;
-                    let willDownloadPromise = Promise.resolve(true);
+                    });
 
-                    let lock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);
-                    if (lock) {
-                        // must download if hashes don't match or file not found
-                        willDownloadPromise = hashFile(filepath)
-                            // swallow error for file not found
-                            .catch(err => null)
-                            .then(hash => {
-                                return hash !== lock.hash
-                            });
-                    }
+                    return Promise.all(filePromiseStack);
 
-                    filePromiseStack.push(
-                        willDownloadPromise.then(willDownload => {
-                            if (willDownload) {
-                                return downloadFile(dep.url, filepath)
-                                    .then(content => {
-                                        dep.hash = createHash(content);
-                                        updateCdnLockList(cdnLock, dep);
-                                    })
-                            }
-                        })
-                    );
+                })
 
-                });
+                promiseStack.push(mkdirPromise);
+            });
 
-                return Promise.all(filePromiseStack);
-
-            })
-
-            promiseStack.push(mkdirPromise);
+            return Promise.all(promiseStack).then(() => {
+                cdnLock.sort(sortByUrl);
+                return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock, null, 4));
+            });
         });
-
-        return Promise.all(promiseStack).then(() => {
-            cdnLock.sort(sortByUrl);
-            return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock, null, 4));
-        });
-    });
 }
 
 function readCdnLockFile() {
@@ -193,6 +179,31 @@ function removeCdnLockEntriesNotInConfig(cdnLock, config) {
         return mockCdnLock.some(mLock => mLock.url === lock.url && mLock.filename === lock.filename);
     });
 }
+
+function checkIfShouldDownloadDependency(dep, filepath, cdnLock) {
+    let matchingLock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);
+
+    if (!matchingLock) {
+        return Promise.resolve(true);
+    }
+
+    // check if local file hash matches saved hash from cdn-lock.json
+    //   for the same url and filename combo
+    return hashFile(filepath)
+        // swallow error for file not found
+        .catch(err => null)
+        .then(hash => {
+            return hash !== matchingLock.hash
+        });
+}
+
+// function downloadDependency(dep, dest, cdnLock) {
+//     return downloadFile(dep.url, dest)
+//         .then(content => {
+//             dep.hash = createHash(content);
+//             updateCdnLockList(cdnLock, dep);
+//         });
+// }
 
 function updateCdnLockList(cdnLock, dep) {
     let existingLock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);

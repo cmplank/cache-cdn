@@ -105,7 +105,7 @@ describe("download cdn", () => {
 
         describe("and cdn-lock.json has NO entries", () => {
             it("and no files are downloaded - downloads cdn references", () => {
-                return downloadCdn().then(ensureFilesDownloaded);
+                return downloadCdn().then(ensureFilesExistLocally);
             });
 
             it("and wrong file is already local - downloads correct file", () => {
@@ -133,7 +133,7 @@ describe("download cdn", () => {
             it("but files are not present - downloads cdn references", () => {
                 return cdnLockExistsPromise
                     .then(() => downloadCdn())
-                    .then(ensureFilesDownloaded);
+                    .then(ensureFilesExistLocally);
             });
 
             it("but local matching filename has wrong contents - downloads correct file", () => {
@@ -175,7 +175,7 @@ describe("download cdn", () => {
         });
     });
 
-    function ensureFilesDownloaded() {
+    function ensureFilesExistLocally() {
         return Promise.all([
             fs.accessAsync(jqueryFile),
             fs.accessAsync(jquery2File),
@@ -184,7 +184,7 @@ describe("download cdn", () => {
     }
 
     function ensureFilesNotFoundLocally() {
-        return ensureFilesDownloaded()
+        return ensureFilesExistLocally()
             .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been because download was turned off)"))
             .catch(err => {
                 if (err.code !== 'ENOENT') throw err;
