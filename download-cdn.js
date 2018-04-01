@@ -101,7 +101,8 @@ function validateConfig(config) {
 
 function downloadCdnLibs(config) {
 
-    let cdnLockPromise = readCdnLockFile();
+    let cdnLockPromise = readCdnLockFile()
+        .then(cdnLock => removeCdnLockEntriesNotInConfig(cdnLock, config));
 
     // TODO: Remove cdnLock entries that aren't in config
 
@@ -156,7 +157,7 @@ function downloadCdnLibs(config) {
 
         return Promise.all(promiseStack).then(() => {
             cdnLock.sort(sortByUrl);
-            return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock));
+            return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock, null, 4));
         });
     });
 }
@@ -170,12 +171,27 @@ function readCdnLockFile() {
             return cdnLock;
         })
         .catch(err => {
-            // console.log("cdn-lock.json not found");
             // If the file isn't there, return empty array
             if (err.code === 'ENOENT') return [];
             // Otherwise, freak out
             throw err;
         });
+}
+
+function removeCdnLockEntriesNotInConfig(cdnLock, config) {
+    let mockCdnLock = [];
+
+    Object.values(config).forEach(block => {
+        block.dependencies.forEach(dep => {
+            mockCdnLock.push({
+                url: dep.url,
+                filename: dep.filename
+            });
+        });
+    });
+    return cdnLock.filter(lock => {
+        return mockCdnLock.some(mLock => mLock.url === lock.url && mLock.filename === lock.filename);
+    });
 }
 
 function updateCdnLockList(cdnLock, dep) {
@@ -206,15 +222,6 @@ function downloadFile(url, destinationFile) {
 function sortByUrl(a, b) {
     return a.url.toUpperCase()
         .localeCompare(b.url.toUpperCase());
-    // var urlA = a.url.toUpperCase(); // ignore upper and lowercase
-    // var urlB = b.url.toUpperCase(); // ignore upper and lowercase
-    // if (urlA < urlB) {
-    //   return -1;
-    // }
-    // if (urlA > urlB) {
-    //   return 1;
-    // }
-    // return 0;
 }
 
 function addCdnEntriesToHtml(config, sourceFile, destinationFile) {

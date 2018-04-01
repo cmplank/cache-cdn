@@ -23,6 +23,7 @@ describe("download cdn", () => {
     let testBootstrapFile = "test-resources/css/bootstrap.min.css";
     let badJqueryFile = 'test-resources/jquery.bad.min.js';
     let testCdnLockPath = 'test-resources/cdn-lock.json';
+    let testCdnLockWithExtraEntriesPath = "cdn-lock.extra.entries.json";
     let cdnLockPath = 'cdn-lock.json';
 
     beforeEach(deleteWorkingFiles);
@@ -121,6 +122,14 @@ describe("download cdn", () => {
                 cdnLockExistsPromise = copyFile(testCdnLockPath, cdnLockPath);
             });
 
+            it("removes cdn-lock.json entries which are not in cdn.json", () => {
+                return cdnLockExistsPromise
+                    .then(() => copyFile(testCdnLockWithExtraEntriesPath, cdnLockPath))
+                    .then(() => downloadCdn())
+                    // Make sure cdn-lock.json ended up getting normalized
+                    .then(() => ensureFilesMatch(cdnLockPath, testCdnLockPath));
+            });
+
             it("but files are not present - downloads cdn references", () => {
                 return cdnLockExistsPromise
                     .then(() => downloadCdn())
@@ -188,6 +197,15 @@ describe("download cdn", () => {
             fs.readFileAsync(badJqueryFile, 'utf8')
         ]).then(([jqContents, badJqContents]) => {
             if (jqContents === badJqContents) throw Error("Bad JQuery was not overwritten");
+        });
+    }
+
+    function ensureFilesMatch(filePath, otherFilePath) {
+        return Promise.all([
+            fs.readFileAsync(filePath, 'utf8'),
+            fs.readFileAsync(otherFilePath, 'utf8')
+        ]).then(([fileContents, otherFileContents]) => {
+            if (fileContents !== otherFileContents) throw Error("Files " + filePath + " and " + otherFilePath + " do not match");
         });
     }
 
