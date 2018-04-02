@@ -105,43 +105,29 @@ function downloadCdnLibs(config) {
         .then(cdnLock => removeCdnLockEntriesNotInConfig(cdnLock, config))
         .then(cdnLock => {
 
-            let promiseStack = [];
+            // Convert config blocks into promises to download
+            return Promise.all(
+                Object.values(config).map(block => {
 
-            // Iterate through config blocks
-            Object.values(config).forEach(block => {
+                    // Create directory if none exists
+                    return mkdirp(block.downloadDirectory).then(() => {
 
-                // Create directory if none exists
-                let mkdirPromise = mkdirp(block.downloadDirectory).then(() => {
+                        // Download files from cdn.json as needed
+                        return Promise.all(
+                            block.dependencies.map(dep => {
+                                let filepath = block.downloadDirectory + "/" + dep.filename;
 
-                    // Download files from cdn.json
-                    let filePromiseStack = [];
-
-                    block.dependencies.forEach(dep => {
-                        let filepath = block.downloadDirectory + "/" + dep.filename;
-                        let shouldDownloadPromise = checkIfShouldDownloadDependency(dep, filepath, cdnLock);
-
-                        filePromiseStack.push(
-                            shouldDownloadPromise.then(shouldDownload => {
-                                if (shouldDownload) {
-                                    return downloadFile(dep.url, filepath)
-                                        .then(content => {
-                                            dep.hash = createHash(content);
-                                            updateCdnLockList(cdnLock, dep);
-                                        })
-                                }
+                                return shouldDownloadDependency(dep, filepath, cdnLock)
+                                    .then(shouldDownload => {
+                                        if (shouldDownload) {
+                                            return downloadDependency(dep, filepath, cdnLock);
+                                        }
+                                    });
                             })
-                        );
-
-                    });
-
-                    return Promise.all(filePromiseStack);
-
+                        )
+                    })
                 })
-
-                promiseStack.push(mkdirPromise);
-            });
-
-            return Promise.all(promiseStack).then(() => {
+            ).then(() => {
                 cdnLock.sort(sortByUrl);
                 return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock, null, 4));
             });
@@ -180,7 +166,7 @@ function removeCdnLockEntriesNotInConfig(cdnLock, config) {
     });
 }
 
-function checkIfShouldDownloadDependency(dep, filepath, cdnLock) {
+function shouldDownloadDependency(dep, filepath, cdnLock) {
     let matchingLock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);
 
     if (!matchingLock) {
@@ -191,19 +177,18 @@ function checkIfShouldDownloadDependency(dep, filepath, cdnLock) {
     //   for the same url and filename combo
     return hashFile(filepath)
         // swallow error for file not found
-        .catch(err => null)
-        .then(hash => {
-            return hash !== matchingLock.hash
-        });
+        .catch(err => err.code)
+        // If file not found or hashes don't match, return true
+        .then(hash => hash === 'ENOENT' || hash !== matchingLock.hash);
 }
 
-// function downloadDependency(dep, dest, cdnLock) {
-//     return downloadFile(dep.url, dest)
-//         .then(content => {
-//             dep.hash = createHash(content);
-//             updateCdnLockList(cdnLock, dep);
-//         });
-// }
+function downloadDependency(dep, dest, cdnLock) {
+    return downloadFile(dep.url, dest)
+        .then(content => {
+            dep.hash = createHash(content);
+            updateCdnLockList(cdnLock, dep);
+        });
+}
 
 function updateCdnLockList(cdnLock, dep) {
     let existingLock = cdnLock.find(lock => lock.url === dep.url && lock.filename === dep.filename);
