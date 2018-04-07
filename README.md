@@ -4,4 +4,6 @@
 
 Manage your cdn libs in one place, download them for local (test) use, write them to your html
 
+I want to give a special thanks to F1LT3R as this project was heavily inspired by [grunt-cdn-switch](https://github.com/F1LT3R/grunt-cdn-switch) and to dimmreaper who [forked that repo](https://github.com/dimmreaper/grunt-cdn-switch) to better serve my needs.
+
 This project is only just beginning.

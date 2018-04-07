@@ -160,7 +160,7 @@ describe("download cdn", () => {
                             fs.statAsync(jqueryFile).then(stats => jqueryModifiedTime = stats.mtimeMs),
                             fs.statAsync(jquery2File).then(stats => jquery2ModifiedTime = stats.mtimeMs),
                             fs.statAsync(bootstrapFile).then(stats => bootstrapModifiedTime = stats.mtimeMs)
-                        ])
+                        ]);
                     })
                     // Run method under test
                     .then(() => downloadCdn())
@@ -222,13 +222,13 @@ describe("download cdn", () => {
     }
 
     function getDirectoryFromFilepath(filepath) {
-        return filepath.substring(0, filepath.lastIndexOf("/"))
+        return filepath.substring(0, filepath.lastIndexOf("/"));
     }
 
     function ensureFileModifiedTimeHasntChanged(filePath, lastModifiedTime) {
         return fs.statAsync(filePath).then(stats => {
             if (lastModifiedTime !== stats.mtimeMs) throw Error("Files were re-downloaded but shouldn't have been");
-        })
+        });
     }
 
 });

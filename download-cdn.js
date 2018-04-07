@@ -212,7 +212,7 @@ function downloadFile(url, destinationFile) {
         return fs.writeFileAsync(destinationFile, content)
             .then(() => content);
     });
-};
+}
 
 function sortByUrl(a, b) {
     return a.url.toUpperCase()
