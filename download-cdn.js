@@ -59,8 +59,7 @@ function validateOptions(options) {
 }
 
 function formatDependencies(config) {
-    Object.keys(config).forEach(blockName => {
-        let block = config[blockName];
+    Object.entries(config).forEach(([blockName, block]) => {
         block.dependencies = block.dependencies.map(dependency => {
             if (dependency.url && dependency.filename) {
                 return dependency;
