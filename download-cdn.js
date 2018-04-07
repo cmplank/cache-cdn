@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
 const Promise = require("bluebird");
 const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
 const requestPromise = require("request-promise");
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 const downloadCdn = options => {
     try {
@@ -19,7 +19,7 @@ const downloadCdn = options => {
     }
 
     // Lookup config in cdn.json
-    let mainPromise = fs.readFileAsync(configFile, 'utf8').then(data => {
+    let mainPromise = fs.readFileAsync(configFile, "utf8").then(data => {
         let config = JSON.parse(data);
         config = formatDependencies(config);
         validateConfig(config);
@@ -40,11 +40,11 @@ const downloadCdn = options => {
 };
 
 function validateOptions(options) {
-    if (options.sourceFile && typeof options.sourceFile !== 'string') {
+    if (options.sourceFile && typeof options.sourceFile !== "string") {
         throw new Error("option.sourceFile must be a string");
     }
 
-    if (options.destinationFile && typeof options.destinationFile !== 'string') {
+    if (options.destinationFile && typeof options.destinationFile !== "string") {
         throw new Error("option.destinationFile must be a string");
     }
 
@@ -53,7 +53,7 @@ function validateOptions(options) {
         throw new Error("You must include both options.sourceFile and options.destinationFile or neither");
     }
 
-    if (options.downloadLibs && typeof options.downloadLibs !== 'boolean') {
+    if (options.downloadLibs && typeof options.downloadLibs !== "boolean") {
         throw new Error("option.downloadLibs must be a boolean");
     }
 }
@@ -67,7 +67,7 @@ function formatDependencies(config) {
             }
             return {
                 url: dependency,
-                filename: dependency.substring(dependency.lastIndexOf('/') + 1)
+                filename: dependency.substring(dependency.lastIndexOf("/") + 1)
             };
         });
     });
@@ -129,13 +129,13 @@ function downloadCdnLibs(config) {
                 })
             ).then(() => {
                 cdnLock.sort(sortByUrl);
-                return fs.writeFileAsync('cdn-lock.json', JSON.stringify(cdnLock, null, 4));
+                return fs.writeFileAsync("cdn-lock.json", JSON.stringify(cdnLock, null, 4));
             });
         });
 }
 
 function readCdnLockFile() {
-    return fs.readFileAsync('cdn-lock.json', 'utf8')
+    return fs.readFileAsync("cdn-lock.json", "utf8")
         .then(contents => {
             let cdnLock = JSON.parse(contents);
             // Iterate through blocks/files
@@ -144,7 +144,7 @@ function readCdnLockFile() {
         })
         .catch(err => {
             // If the file isn't there, return empty array
-            if (err.code === 'ENOENT') return [];
+            if (err.code === "ENOENT") return [];
             // Otherwise, freak out
             throw err;
         });
@@ -179,7 +179,7 @@ function shouldDownloadDependency(dep, filepath, cdnLock) {
         // swallow error for file not found
         .catch(err => err.code)
         // If file not found or hashes don't match, return true
-        .then(hash => hash === 'ENOENT' || hash !== matchingLock.hash);
+        .then(hash => hash === "ENOENT" || hash !== matchingLock.hash);
 }
 
 function downloadDependency(dep, dest, cdnLock) {
@@ -200,12 +200,12 @@ function updateCdnLockList(cdnLock, dep) {
 }
 
 function hashFile(filepath) {
-    return fs.readFileAsync(filepath, 'utf8')
+    return fs.readFileAsync(filepath, "utf8")
         .then(contents => createHash(contents));
 }
 
 function createHash(string) {
-    return crypto.createHash('md5').update(string).digest('hex');
+    return crypto.createHash("md5").update(string).digest("hex");
 }
 
 function downloadFile(url, destinationFile) {
@@ -221,7 +221,7 @@ function sortByUrl(a, b) {
 }
 
 function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
-    return fs.readFileAsync(sourceFile, 'utf8').then(htmlFileContents => {
+    return fs.readFileAsync(sourceFile, "utf8").then(htmlFileContents => {
 
         // Iterate through cdn.json properties (e.g. "js", "css")
         Object.values(config).forEach(block => {
@@ -234,7 +234,7 @@ function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
         });
 
         return mkdirp(destinationFile.substring(0, destinationFile.lastIndexOf("/"))).then(() => {
-            return fs.writeFileAsync(destinationFile, htmlFileContents, 'utf8');
+            return fs.writeFileAsync(destinationFile, htmlFileContents, "utf8");
         });
     });
 }

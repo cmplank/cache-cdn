@@ -1,4 +1,4 @@
-const chai = require('chai');
+const chai = require("chai");
 const expect = require("chai").expect;
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
@@ -9,7 +9,7 @@ const Promise = require("bluebird");
 const rimraf = Promise.promisify(require("rimraf"));
 const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
-const fsCopyFile = require('fs-copy-file');
+const fsCopyFile = require("fs-copy-file");
 
 describe("download cdn", () => {
 
@@ -22,10 +22,10 @@ describe("download cdn", () => {
     let testJqueryFile = "test-resources/js/jquery.min.js";
     let testJquery2File = "test-resources/js/jquery2.min.js";
     let testBootstrapFile = "test-resources/css/bootstrap.min.css";
-    let badJqueryFile = 'test-resources/jquery.bad.min.js';
-    let testCdnLockPath = 'test-resources/cdn-lock.json';
+    let badJqueryFile = "test-resources/jquery.bad.min.js";
+    let testCdnLockPath = "test-resources/cdn-lock.json";
     let testCdnLockWithExtraEntriesPath = "cdn-lock.extra.entries.json";
-    let cdnLockPath = 'cdn-lock.json';
+    let cdnLockPath = "cdn-lock.json";
 
     beforeEach(deleteWorkingFiles);
 
@@ -80,8 +80,8 @@ describe("download cdn", () => {
         it("adds cdn references to index.html", () => {
             return downloadCdn(options).then(() => {
                 return Promise.all([
-                    fs.readFileAsync(options.destinationFile, 'utf8'),
-                    fs.readFileAsync("expected/index.html", 'utf8')
+                    fs.readFileAsync(options.destinationFile, "utf8"),
+                    fs.readFileAsync("expected/index.html", "utf8")
                 ]).then(([destinationContents, expectedContents]) => {
                     expect(destinationContents).to.equal(expectedContents);
                 });
@@ -188,14 +188,14 @@ describe("download cdn", () => {
         return ensureFilesExistLocally()
             .then(() => expect.fail(null, null, "Cdn files were downloaded (but shouldn't have been because download was turned off)"))
             .catch(err => {
-                if (err.code !== 'ENOENT') throw err;
+                if (err.code !== "ENOENT") throw err;
             });
     }
 
     function ensureBadJqueryFileOverwritten() {
         return Promise.all([
-            fs.readFileAsync(jqueryFile, 'utf8'),
-            fs.readFileAsync(badJqueryFile, 'utf8')
+            fs.readFileAsync(jqueryFile, "utf8"),
+            fs.readFileAsync(badJqueryFile, "utf8")
         ]).then(([jqContents, badJqContents]) => {
             if (jqContents === badJqContents) throw Error("Bad JQuery was not overwritten");
         });
@@ -203,8 +203,8 @@ describe("download cdn", () => {
 
     function ensureFilesMatch(filePath, otherFilePath) {
         return Promise.all([
-            fs.readFileAsync(filePath, 'utf8'),
-            fs.readFileAsync(otherFilePath, 'utf8')
+            fs.readFileAsync(filePath, "utf8"),
+            fs.readFileAsync(otherFilePath, "utf8")
         ]).then(([fileContents, otherFileContents]) => {
             if (fileContents !== otherFileContents) throw Error("Files " + filePath + " and " + otherFilePath + " do not match");
         });
