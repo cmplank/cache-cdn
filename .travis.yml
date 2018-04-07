@@ -3,4 +3,4 @@ sudo: false
 node_js:
   - "7.0"
 script:
-  - npm ci-test
+  - npm run ci-test
