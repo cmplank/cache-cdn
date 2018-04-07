@@ -28,7 +28,7 @@ FNDA:15,updateCdnLockList
 FNDA:12,hashFile
 FNDA:19,createHash
 FNDA:15,downloadFile
-FNDA:17,sortByUrl
+FNDA:16,sortByUrl
 FNDA:2,addCdnEntriesToHtml
 DA:3,1
 DA:4,1
@@ -134,7 +134,7 @@ DA:212,15
 DA:213,15
 DA:214,15
 DA:218,1
-DA:219,17
+DA:219,16
 DA:223,1
 DA:224,2
 DA:227,2
