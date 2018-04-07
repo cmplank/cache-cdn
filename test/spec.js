@@ -9,6 +9,7 @@ const Promise = require("bluebird");
 const rimraf = Promise.promisify(require("rimraf"));
 const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
+const fsCopyFile = require('fs-copy-file');
 
 describe("download cdn", () => {
 
@@ -213,7 +214,7 @@ describe("download cdn", () => {
         return mkdirp(getDirectoryFromFilepath(dest))
             .then(() => {
                 return new Promise((resolve, reject) => {
-                    fs.copyFile(src, dest, () => {
+                    fsCopyFile(src, dest, () => {
                         resolve(true);
                     });
                 });
