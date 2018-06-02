@@ -1,7 +1,7 @@
 {
   "name": "download-cdn",
   "version": "1.0.0",
-  "description": "Manage cdn libs in one place, download them for local (test) use, and write them to html",
+  "description": "Manage your cdn libs in one place. Download them for local use (e.g. unit tests) and write the cdn scripts/links to your html.",
   "main": "download-cdn.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --timeout 10000 --reporter spec",
@@ -24,7 +24,9 @@
   },
   "homepage": "https://github.com/cmplank/download-cdn#readme",
   "files": [
-    "download-cdn.js"
+    "download-cdn.js",
+    "README.md",
+    "LICENSE"
   ],
   "devDependencies": {
     "chai": "^4.1.2",
