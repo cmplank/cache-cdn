@@ -1,8 +1,8 @@
-# download-cdn
+# cache-cdn
 
-[![Build Status](https://travis-ci.org/cmplank/download-cdn.svg?branch=master)](https://travis-ci.org/cmplank/download-cdn)
-[![Coverage Status](https://coveralls.io/repos/github/cmplank/download-cdn/badge.svg?branch=master)](https://coveralls.io/github/cmplank/download-cdn?branch=master)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/78430de6c5614086b481693f14de3206)](https://www.codacy.com/app/cmplank/download-cdn?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cmplank/download-cdn&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.org/cmplank/cache-cdn.svg?branch=master)](https://travis-ci.org/cmplank/cache-cdn)
+[![Coverage Status](https://coveralls.io/repos/github/cmplank/cache-cdn/badge.svg?branch=master)](https://coveralls.io/github/cmplank/cache-cdn?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/78430de6c5614086b481693f14de3206)](https://www.codacy.com/app/cmplank/cache-cdn?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cmplank/cache-cdn&amp;utm_campaign=Badge_Grade)
 
 Download cdn libraries for local use (e.g. unit tests). Define your cdn libs in one place and write the references into your html.
 
@@ -10,7 +10,7 @@ Download cdn libraries for local use (e.g. unit tests). Define your cdn libs in 
 
 - This library requires node ^7.0.0
 
-download-cdn combines two features:
+cache-cdn combines two features:
 - downloading cdn dependencies to a specified directory
 - writing cdn script/link tags into your html
 
@@ -58,13 +58,13 @@ Second, add the replaceString values to your index.html
 
 ```
 
-Third, import download-cdn and call it with a source (your html file) and destination.
+Third, import cache-cdn and call it with a source (your html file) and destination.
 
 ```javascript
 
-const downloadCdn = require("../download-cdn");
+const cacheCdn = require("../cache-cdn");
 
-downloadCdn({
+cacheCdn({
     sourceFile: "app/index.html",
     destinationFile: "dist/index.html"
 });

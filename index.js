@@ -6,7 +6,7 @@ const mkdirp = Promise.promisify(require("mkdirp"));
 const requestPromise = require("request-promise");
 const crypto = require("crypto");
 
-const downloadCdn = options => {
+const cacheCdn = options => {
     try {
         if (!options) options = {};
         validateOptions(options);
@@ -238,4 +238,4 @@ function addCdnEntriesToHtml(config, sourceFile, destinationFile) {
     });
 }
 
-module.exports = downloadCdn;
+module.exports = cacheCdn;

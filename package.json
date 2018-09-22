@@ -1,5 +1,5 @@
 {
-  "name": "cdn-local-cache",
+  "name": "cache-cdn",
   "version": "1.0.0",
   "description": "Download cdn libraries for local use (e.g. unit tests). Define your cdn libs in one place and write the references into your html.",
   "main": "index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cmplank/download-cdn.git"
+    "url": "git+https://github.com/cmplank/cache-cdn.git"
   },
   "keywords": [
     "cdn",
@@ -21,9 +21,9 @@
   "author": "Colin Plank",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cmplank/download-cdn/issues"
+    "url": "https://github.com/cmplank/cache-cdn/issues"
   },
-  "homepage": "https://github.com/cmplank/download-cdn#readme",
+  "homepage": "https://github.com/cmplank/cache-cdn#readme",
   "files": [
     "index.js",
     "README.md",

@@ -3,7 +3,7 @@ const expect = require("chai").expect;
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 
-const downloadCdn = require("../index");
+const cacheCdn = require("../index");
 
 const Promise = require("bluebird");
 const rimraf = Promise.promisify(require("rimraf"));
@@ -11,7 +11,7 @@ const fs = Promise.promisifyAll(require("fs"));
 const mkdirp = Promise.promisify(require("mkdirp"));
 const fsCopyFile = require("fs-copy-file");
 
-describe("download cdn", () => {
+describe("cache cdn", () => {
 
     // cdn resources
     let jqueryFile = "tmp/js/jquery.min.js";
@@ -41,17 +41,17 @@ describe("download cdn", () => {
 
     it("fails when can't find cdn.json or specified config file", () => {
         let options = { configFile: "cdn.missing.json" };
-        return expect(downloadCdn(options)).to.be.rejected;
+        return expect(cacheCdn(options)).to.be.rejected;
     });
 
     it("fails when options.sourceFile is not accompanied by destinationFile", () => {
         let options = { sourceFile: "file.txt" };
-        return expect(downloadCdn(options)).to.be.rejected;
+        return expect(cacheCdn(options)).to.be.rejected;
     });
 
     it("fails when options.downloadLibs is not a boolean", () => {
         let options = { downloadLibs: ["my/directory"] };
-        return expect(downloadCdn(options)).to.be.rejected;
+        return expect(cacheCdn(options)).to.be.rejected;
     });
 
     it("fails when running with bad config: duplicate filenames: download ON", () => {
@@ -59,7 +59,7 @@ describe("download cdn", () => {
             configFile: "test-resources/cdn.dup.filename.json",
             downloadLibs: true
         };
-        return expect(downloadCdn(options)).to.be.rejected;
+        return expect(cacheCdn(options)).to.be.rejected;
     });
 
     it("fails when running with bad config: duplicate filenames in different blocks: download ON", () => {
@@ -67,7 +67,7 @@ describe("download cdn", () => {
             configFile: "test-resources/cdn.dup.filename.diff.block.json",
             downloadLibs: true
         };
-        return expect(downloadCdn(options)).to.be.rejected;
+        return expect(cacheCdn(options)).to.be.rejected;
     });
 
     describe("when running with index.html insertion config", () => {
@@ -78,7 +78,7 @@ describe("download cdn", () => {
         };
 
         it("adds cdn references to index.html", () => {
-            return downloadCdn(options).then(() => {
+            return cacheCdn(options).then(() => {
                 return Promise.all([
                     fs.readFileAsync(options.destinationFile, "utf8"),
                     fs.readFileAsync("expected/index.html", "utf8")
@@ -97,7 +97,7 @@ describe("download cdn", () => {
         };
 
         it("does not download cdn references", () => {
-            return downloadCdn(options)
+            return cacheCdn(options)
                 .then(ensureFilesNotFoundLocally);
         });
     });
@@ -106,12 +106,12 @@ describe("download cdn", () => {
 
         describe("and cdn-lock.json has NO entries", () => {
             it("and no files are downloaded - downloads cdn references", () => {
-                return downloadCdn().then(ensureFilesExistLocally);
+                return cacheCdn().then(ensureFilesExistLocally);
             });
 
             it("and wrong file is already local - downloads correct file", () => {
                 return copyFile(badJqueryFile, jqueryFile)
-                    .then(() => downloadCdn())
+                    .then(() => cacheCdn())
                     .then(ensureBadJqueryFileOverwritten);
             });
         });
@@ -126,21 +126,21 @@ describe("download cdn", () => {
             it("removes cdn-lock.json entries which are not in cdn.json", () => {
                 return cdnLockExistsPromise
                     .then(() => copyFile(testCdnLockWithExtraEntriesPath, cdnLockPath))
-                    .then(() => downloadCdn())
+                    .then(() => cacheCdn())
                     // Make sure cdn-lock.json ended up getting normalized
                     .then(() => ensureFilesMatch(cdnLockPath, testCdnLockPath));
             });
 
             it("but files are not present - downloads cdn references", () => {
                 return cdnLockExistsPromise
-                    .then(() => downloadCdn())
+                    .then(() => cacheCdn())
                     .then(ensureFilesExistLocally);
             });
 
             it("but local matching filename has wrong contents - downloads correct file", () => {
                 return cdnLockExistsPromise
                     .then(() => copyFile(badJqueryFile, jqueryFile))
-                    .then(() => downloadCdn())
+                    .then(() => cacheCdn())
                     .then(ensureBadJqueryFileOverwritten);
             });
 
@@ -163,7 +163,7 @@ describe("download cdn", () => {
                         ]);
                     })
                     // Run method under test
-                    .then(() => downloadCdn())
+                    .then(() => cacheCdn())
                     // Validate modified times are unchanged
                     .then(() => {
                         return Promise.all([
