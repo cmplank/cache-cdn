@@ -3,7 +3,7 @@ const expect = require("chai").expect;
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 
-const downloadCdn = require("../download-cdn");
+const downloadCdn = require("../index");
 
 const Promise = require("bluebird");
 const rimraf = Promise.promisify(require("rimraf"));

@@ -1,8 +1,8 @@
 {
-  "name": "download-cdn",
+  "name": "cdn-local-cache",
   "version": "1.0.0",
-  "description": "Manage your cdn libs in one place. Download them for local use (e.g. unit tests) and write the cdn scripts/links to your html.",
-  "main": "download-cdn.js",
+  "description": "Download cdn libraries for local use (e.g. unit tests). Define your cdn libs in one place and write the references into your html.",
+  "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --timeout 10000 --reporter spec",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec",
@@ -15,7 +15,8 @@
   "keywords": [
     "cdn",
     "download",
-    "local"
+    "local",
+    "cache"
   ],
   "author": "Colin Plank",
   "license": "MIT",
@@ -24,7 +25,7 @@
   },
   "homepage": "https://github.com/cmplank/download-cdn#readme",
   "files": [
-    "download-cdn.js",
+    "index.js",
     "README.md",
     "LICENSE"
   ],

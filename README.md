@@ -4,14 +4,14 @@
 [![Coverage Status](https://coveralls.io/repos/github/cmplank/download-cdn/badge.svg?branch=master)](https://coveralls.io/github/cmplank/download-cdn?branch=master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/78430de6c5614086b481693f14de3206)](https://www.codacy.com/app/cmplank/download-cdn?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cmplank/download-cdn&amp;utm_campaign=Badge_Grade)
 
-Manage your cdn libs in one place. Download them for local use (e.g. unit tests) and write the cdn scripts/links to your html.
+Download cdn libraries for local use (e.g. unit tests). Define your cdn libs in one place and write the references into your html.
 
 ## Getting Started
 
 - This library requires node ^7.0.0
 
-In order to keep a single listing of cdn libraries in your project, download-cdn combines two features:
-- downloading cdn dependencies
+download-cdn combines two features:
+- downloading cdn dependencies to a specified directory
 - writing cdn script/link tags into your html
 
 ## Setup
@@ -64,12 +64,10 @@ Third, import download-cdn and call it with a source (your html file) and destin
 
 const downloadCdn = require("../download-cdn");
 
-let options = {
+downloadCdn({
     sourceFile: "app/index.html",
     destinationFile: "dist/index.html"
-};
-
-downloadCdn(options);
+});
 
 ```
 
