@@ -20,12 +20,11 @@ cache-cdn:
 First, create a cdn.json file in the root of your project. This file will contain a list of dependencies by type (typically js and css). 
 
 ```json
-
 {
     "js": {
         "replaceString": "<!-- cdn-js-libs -->",
         "replaceTemplate": "<script src='@' defer></script>",
-        "downloadDirectory": "tmp/js",
+        "downloadDirectory": "cdn/js",
         "dependencies": [
             "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js",
             "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"
@@ -34,21 +33,19 @@ First, create a cdn.json file in the root of your project. This file will contai
     "css": {
         "replaceString": "<!-- cdn-css-libs -->",
         "replaceTemplate": "<link href='@'>",
-        "downloadDirectory": "tmp/css",
+        "downloadDirectory": "cdn/css",
         "dependencies": [
             "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         ]
     }
 }
-
 ```
 
-This file is configured to download the 3 listed dependencies into respective tmp/js and tmp/css directories in your project. It will also replace tokens (values of "replaceString") with script/link tags containing your dependencies.
+This file is configured to download the 3 listed dependencies into respective cdn/js and cdn/css directories in your project. It will also replace tokens (values of "replaceString") with script/link tags containing your dependencies.
 
 Second, add the replaceString values to your index.html
 
 ```html
-
 <html>
 <head>
     <!-- cdn-js-libs -->
@@ -56,26 +53,22 @@ Second, add the replaceString values to your index.html
 </head>
 <body> ... </body>
 </html>
-
 ```
 
 Third, import cache-cdn and call it with a source (your html file) and destination.
 
 ```javascript
-
 const cacheCdn = require("../cache-cdn");
 
 cacheCdn({
     sourceFile: "app/index.html",
     destinationFile: "dist/index.html"
 });
-
 ```
 
 Result:
 
 ```html
-
 <html>
 <head>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js' defer></script>
@@ -84,7 +77,6 @@ Result:
 </head>
 <body> ... </body>
 </html>
-
 ```
 
 
@@ -134,7 +126,7 @@ The value of replaceTemplate will be used to generate each needed cdn tag in you
 
 **downloadDirectory**
 
-Type: `string` Example: `tmp/js`
+Type: `string` Example: `cdn/js`
 
 Source html file which contains a replaceString matching that in cdn.json.
 
@@ -142,7 +134,7 @@ Source html file which contains a replaceString matching that in cdn.json.
 
 Type: `array` Example: `["https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"]`
 
-Array full of urls to cdn libraries. In the event that you end up with two files with the same name being downloaded into the same directory (e.g. tmp/js), you can replace one of the strings with an object that has `url` and `filename` properties. The url will be the same as before, but you choose the alternate filename you want to use. The following is an example:
+Array full of urls to cdn libraries. In the event that you end up with two files with the same name being downloaded into the same directory (e.g. cdn/js), you can replace one of the strings with an object that has `url` and `filename` properties. The url will be the same as before, but you choose the alternate filename you want to use. The following is an example:
 
 ```javascript
     ...
