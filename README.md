@@ -10,9 +10,10 @@ Download cdn libraries for local use (e.g. unit tests). Define your cdn libs in 
 
 - This library requires node ^7.0.0
 
-cache-cdn combines two features:
-- downloading cdn dependencies to a specified directory
-- writing cdn script/link tags into your html
+cache-cdn:
+- downloads cdn dependencies to a specified directory
+- writes cdn script/link tags into your html
+- keeps track of downloaded cdn libs to avoid re-fetching
 
 ## Setup
 
