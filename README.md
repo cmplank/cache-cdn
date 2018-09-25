@@ -23,7 +23,7 @@ First, create a cdn.json file in the root of your project. This file will contai
 {
     "js": {
         "replaceString": "<!-- cdn-js-libs -->",
-        "replaceTemplate": "<script src='@' defer></script>",
+        "replaceTemplate": "<script src='@'></script>",
         "downloadDirectory": "cdn/js",
         "dependencies": [
             "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js",
@@ -55,7 +55,7 @@ Second, add the replaceString values to your index.html
 </html>
 ```
 
-Third, import cache-cdn and call it with a source (your html file) and destination.
+Third, import cache-cdn and call it with a source and destination.
 
 ```javascript
 const cacheCdn = require("../cache-cdn");
@@ -66,18 +66,20 @@ cacheCdn({
 });
 ```
 
-Result:
+This results in the cdn files being downloaded to the cdn/js and cdn/css libraries respectively. The dist/html file will look like this:
 
 ```html
 <html>
 <head>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js' defer></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js' defer></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js'></script>
     <link href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
 </head>
 <body> ... </body>
 </html>
 ```
+
+When you download the cdn libraries, a `cdn-lock.json` file is created to keep track of versions and make sure downloads are not attempted when they are not needed. Make sure to check in the lock file so that server builds will not redownload your cdn libraries on every run.
 
 
 ## Available Options
@@ -120,7 +122,7 @@ A string token which will be found in the sourceFile and replaced with an array 
 
 **replaceTemplate**
 
-Type: `string` Example: `"<script src='@' defer></script>"`
+Type: `string` Example: `"<script src='@'></script>"`
 
 The value of replaceTemplate will be used to generate each needed cdn tag in your html file. As "dependencies" are iterated over, the `@` symbol is replaced with each dependency url.
 
@@ -146,7 +148,9 @@ Array full of urls to cdn libraries. In the event that you end up with two files
 ```
 
 
+## Release History
 
+1.0.0 - initial release
 
 
 ## Acknowledgements
